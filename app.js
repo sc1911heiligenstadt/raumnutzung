@@ -1166,6 +1166,33 @@ function loescheAntrag() {
   doSave();
 }
 
+// pdf-lib steht bewusst NICHT fest im <head>: es ist mit 202 KB die größte
+// Einzeldatei, die diese App überhaupt lädt, gebraucht wird es aber nur von den
+// drei Ausgabewegen (Einzel-PDF, Mailversand, Sammelexport) — und die gehen
+// ohnehin nur die Leute mit Administrieren-Recht. Gleiche Bauform wie ladeJsZip
+// darunter; erster Bedarf lädt nach, jeder weitere bekommt dieselbe Promise.
+//
+// ⚠️ Die Nutzung selbst steht in pdf-fill.js und bleibt unangetastet — der
+// Aufrufer sorgt dafür, dass PDFLib da ist. pdf-fill.js enthält im
+// WinAnsi-Regex ein echtes Null-Byte und wird deshalb von Suchwerkzeugen als
+// Binärdatei übersprungen; sie hier nicht anzufassen ist Absicht.
+let pdfLibLadevorgang = null;
+function ladePdfLib() {
+  if (typeof PDFLib !== "undefined") return Promise.resolve();
+  if (pdfLibLadevorgang) return pdfLibLadevorgang;
+  pdfLibLadevorgang = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+    s.onload = () => resolve();
+    s.onerror = () => {
+      pdfLibLadevorgang = null; // nächster Versuch darf es erneut probieren
+      reject(new Error("PDF-Bibliothek konnte nicht geladen werden (Internetverbindung nötig)."));
+    };
+    document.head.appendChild(s);
+  });
+  return pdfLibLadevorgang;
+}
+
 async function erzeugePdf() {
   const a = findeAntrag(currentAntragId);
   if (!a) return;
@@ -1178,6 +1205,7 @@ async function erzeugePdf() {
   btn.textContent = "PDF wird erzeugt…";
   try {
     flushSave();
+    await ladePdfLib();
     // Die Unterschrift kann bereits ausgelagert sein — dann liegt im Datensatz
     // nur die Datei-Id und das Bild muss fürs PDF erst geholt werden.
     let unterschrift = a.unterschrift;
@@ -1270,8 +1298,9 @@ async function exportiereAllePdfs() {
   btn.disabled = true;
   const probleme = [];
   try {
-    btn.textContent = "ZIP-Bibliothek wird geladen…";
-    await ladeJsZip();
+    btn.textContent = "Bibliotheken werden geladen…";
+    // Beide parallel: der Sammelexport braucht PDF-Erzeugung UND das Archiv.
+    await Promise.all([ladePdfLib(), ladeJsZip()]);
     flushSave();
 
     const zip = new JSZip();
@@ -1348,6 +1377,7 @@ async function sendePerMail() {
   btn.textContent = "Wird gesendet…";
   try {
     flushSave();
+    await ladePdfLib();
     // Wie in erzeugePdf: die Unterschrift kann bereits ausgelagert sein und muss
     // fürs PDF erst geholt werden.
     let unterschrift = a.unterschrift;

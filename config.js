@@ -2,6 +2,18 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.1",
+    groups: [
+      {
+        title: "Startet schneller",
+        items: [
+          "Die PDF-Bibliothek wird erst geladen, wenn wirklich ein PDF entsteht. Vorher kam sie bei jedem Öffnen der Seite mit — mit 202 KB war sie die größte Datei der ganzen App, gebraucht wird sie aber nur beim Erzeugen, Versenden und beim Sammelexport.",
+          "Am Ablauf ändert sich nichts: beim ersten PDF lädt sie automatisch nach. Nur wenn dabei keine Internetverbindung besteht, sagt die App es jetzt deutlich."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.0",
     groups: [
       {
