@@ -5,6 +5,13 @@ const APP_CHANGELOG = [
     version: "1.2",
     groups: [
       {
+        title: "Benachrichtigungen",
+        items: [
+          "Ein fertig ausgefüllter Antrag meldete sich bisher auf den Geräten aller, die die App bearbeiten dürfen — auch bei denen, die ihn gar nicht einreichen können. Jetzt geht die Nachricht nur noch an die, die den Antrag beim Landkreis einreichen.",
+          "An der Nachricht über den weiteren Stand ändert sich nichts: die bekommt weiterhin nur, wer den Antrag ausgefüllt hat."
+        ]
+      },
+      {
         title: "Am Handy",
         items: [
           "Bisher brach die Reiterleiste selbst um, die rechte Reiter-Gruppe darin aber nicht: Sie rutschte als ein Stück in die zweite Zeile und lief dort weiter über den rechten Rand hinaus. Jetzt bricht auch sie um, sobald sie zu breit wird. Zu sehen ist das nur, wenn genug Reiter nebeneinanderstehen — bis dahin sieht alles aus wie bisher."
