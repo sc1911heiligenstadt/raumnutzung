@@ -991,6 +991,20 @@ function zugeschnittenesPng() {
   return aus.toDataURL("image/png");
 }
 
+// Die ausgelagerte Unterschrift-Datei mitnehmen. Der Vorgang selbst (Unterschrift
+// entfernen bzw. Antrag löschen) läuft weiter, auch wenn die Cloud gerade nicht
+// mitspielt -- eine verwaiste Datei darf ihn nicht aufhalten. Sichtbar werden
+// muss der Fehlschlag trotzdem: in der Datei steckt eine Unterschrift, und wer
+// nichts davon erfährt, räumt sie auch nicht auf.
+// Bugjagd 2026-08-30: an beiden Aufrufstellen stand ein leeres .catch().
+function loescheUnterschriftsdateiNebenbei(fileId, vorgangGetan) {
+  if (!fileId) return;
+  gatewayFileDelete(fileId).catch((e) => {
+    alert(vorgangGetan + " Die gespeicherte Unterschrift konnte aber nicht aus der "
+      + "Vereins-Cloud entfernt werden (" + ((e && e.message) || e) + ") — sie liegt dort weiter.");
+  });
+}
+
 function loescheUnterschrift() {
   const a = findeAntrag(currentAntragId);
   if (!a || !canEdit()) return;
@@ -1001,9 +1015,7 @@ function loescheUnterschrift() {
   a.unterschriebenAm = "";
   a.geaendertAm = new Date().toISOString();
   setUnterschriftStatus(a);
-  // Die ausgelagerte Datei mitnehmen — sonst bleiben Bild-Leichen in der Cloud.
-  // Scheitert das, ist nur eine verwaiste Datei die Folge, kein Datenverlust.
-  if (alteId) gatewayFileDelete(alteId).catch(() => {});
+  loescheUnterschriftsdateiNebenbei(alteId, "Die Unterschrift wurde entfernt.");
   scheduleSave();
 }
 
@@ -1155,9 +1167,7 @@ function loescheAntrag() {
   if (!a || !canEdit()) return;
   const name = a.bezeichnung || "diesen Antrag";
   if (!confirm(`„${name}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`)) return;
-  // Ausgelagerte Unterschrift mitnehmen, sonst bleibt sie als verwaiste Datei
-  // in der Cloud liegen.
-  if (a.unterschriftFileId) gatewayFileDelete(a.unterschriftFileId).catch(() => {});
+  loescheUnterschriftsdateiNebenbei(a.unterschriftFileId, "Der Antrag wurde gelöscht.");
   appData.antraege = appData.antraege.filter((x) => x.id !== a.id);
   currentAntragId = null;
   el("nav-antrag").style.display = "none";

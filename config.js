@@ -2,6 +2,18 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.5",
+    groups: [
+      {
+        title: "Wenn eine Unterschrift nicht gelöscht werden kann, steht das jetzt da",
+        items: [
+          "Wird eine Unterschrift entfernt oder ein Antrag gelöscht, verschwindet auch die gespeicherte Unterschrift aus der Vereins-Cloud. Schlug das fehl — etwa weil die Cloud gerade nicht erreichbar war — passierte bisher nichts Sichtbares: der Antrag war weg, die Datei mit der Unterschrift lag aber weiter dort.",
+          "Jetzt erscheint ein Hinweis mit dem Grund. Der Vorgang selbst läuft weiter, eine liegengebliebene Datei hält ihn nicht auf."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.4",
     groups: [
       {
