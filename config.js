@@ -2,6 +2,18 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.4",
+    groups: [
+      {
+        title: "Beim Sitzungsende wird auch alles neben der Seite geräumt",
+        items: [
+          "Beim Sitzungsende wurde die Seite bereits geleert. Der eigene Name oben rechts steht aber daneben und blieb stehen. Jetzt wird er mitgeleert.",
+          "Der Hinweis erscheint außerdem an jeder Stelle, an der die Anmeldung wegfällt — vorher nur bei einem Teil der Wege."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.3",
     groups: [
       {
