@@ -2,6 +2,20 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.7",
+    groups: [
+      {
+        title: "Umlaute im PDF: aus „Müller“ konnte „Mu?ller“ werden",
+        items: [
+          "Ein „ü“ kann auf zwei Arten im Rechner stehen: als ein Zeichen, oder als „u“ mit einem getrennt gespeicherten Pünktchen-Zeichen dahinter. Auf dem Bildschirm sieht beides gleich aus.",
+          "Das PDF-Formular kann nur den ersten Zeichensatz. Alles andere wurde durch ein Fragezeichen ersetzt — bei der zweiten Art traf das genau das Pünktchen-Zeichen. Im Antrag ans Landratsamt stand dann „Mu?ller“ statt „Müller“, „Turnhalle Su?d“ statt „Turnhalle Süd“.",
+          "Zu sehen war davon nichts: Auf der Seite stand der Name richtig, das Fragezeichen tauchte erst im fertigen PDF auf. Betroffen war, wer einen Namen eingefügt statt getippt hat — vom Mac oder iPhone kommt meist die zweite Art.",
+          "Jetzt werden beide Arten gleich behandelt. An bereits erzeugten PDF-Dateien ändert sich nichts, die müssen neu erzeugt werden."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.6",
     groups: [
       {
