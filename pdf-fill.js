@@ -1,0 +1,319 @@
+// Befüllt das Original-Formular des Landkreises Eichsfeld mit den Daten eines
+// Antrags. pdf-lib wird als globales `PDFLib` über CDN geladen (gleiche
+// Einbindung wie in Trainerdaten und digitaler-stempel).
+//
+// Bewusst KEIN form.flatten(): Das erzeugte PDF bleibt ausfüllbar, damit sich
+// Kleinigkeiten nach einer Rückfrage des Amtes direkt im PDF-Programm ändern
+// lassen, ohne den Antrag noch einmal durch die App zu schicken.
+
+const PDF_TEMPLATE_URL = "raumnutzung-formular.pdf?v=1.0";
+
+// Zeichen, die WinAnsi (die Kodierung der Standard-Schriften in pdf-lib) nicht
+// kennt, würden beim Setzen eines Feldes eine Exception werfen und damit die
+// ganze PDF-Erzeugung abbrechen. Umlaute und ß sind enthalten und bleiben, nur
+// die typografischen Sonderzeichen werden auf ihre ASCII-Entsprechung gezogen.
+const WINANSI_ERSATZ = {
+  "‘": "'", "’": "'", "‚": "'", "‛": "'",
+  "“": '"', "”": '"', "„": '"', "‟": '"',
+  "–": "-", "—": "-", "−": "-", "…": "...",
+  " ": " ", " ": " ", " ": " ", "​": "",
+  "→": "->", "≤": "<=", "≥": ">=", "×": "x"
+};
+
+function pdfText(wert) {
+  let s = String(wert === null || wert === undefined ? "" : wert);
+  // ⚠️ NFC ZUERST. Ein "ü" kann zerlegt ankommen (u + Trema) -- so liefert
+  // es macOS/iOS beim Einfuegen. Das Trema allein liegt AUSSERHALB von
+  // Latin-1 und wurde vom Filter unten zu "?": aus "Müller" wurde "Mu?ller",
+  // und zwar erst im fertigen PDF -- auf dem Bildschirm sah der Name richtig
+  // aus. Das ging so in den Antrag an den Landkreis.
+  s = s.normalize("NFC");
+  // Zeilenumbrüche und Tabs sind Worttrenner, keine unbekannten Zeichen: der
+  // Latin-1-Filter unten beginnt erst beim Leerzeichen (U+0020) und würde sie
+  // sonst zu „?“ machen — ein Textarea-Text mit Enter käme als
+  // „Zeile1?Zeile2“ im Antrag ans Amt an. umbrechen() splittet erst nach
+  // diesem Aufruf an Leerzeichen, die Wortverteilung bleibt also erhalten.
+  s = s.replace(/[\r\n\t]+/g, " ");
+  s = s.replace(/[‘’‚‛“”„‟–—−…   ​→≤≥×]/g,
+    // `in`-Check statt `|| " "`: der Ersatz für das Nullbreiten-Leerzeichen
+    // ist der Leerstring, und der ist falsy — mit `||` würde er zum Leerzeichen.
+    (c) => (c in WINANSI_ERSATZ ? WINANSI_ERSATZ[c] : " "));
+  // Alles, was danach noch außerhalb von Latin-1 liegt, ersetzen statt den
+  // Export scheitern zu lassen (z.B. Emoji aus einer kopierten Beschreibung).
+  // ⚠️ \u0000 als Escape, NICHT als literales Zeichen. Ein echtes Null-Byte
+  // in der Datei macht sie fuer git binaer: jedes git grep ueberspringt sie
+  // dann mit "Binary file matches" statt die Zeile zu zeigen. Der NFC-Fehler
+  // direkt darueber ist deshalb drei Flottenlaeufe lang unentdeckt geblieben.
+  s = s.replace(/[^\u0000-\u00ff]/g, "?");
+  return s;
+}
+
+// Verteilt einen Fließtext wortweise auf die vorhandenen Zeilen des Formulars.
+// Was nicht mehr passt, landet vollständig in der letzten Zeile — abschneiden
+// wäre schlimmer als eine überlange Zeile, weil der Antrag sonst stillschweigend
+// unvollständig beim Amt ankäme.
+function umbrechen(text, anzahlZeilen, zeilenlaenge) {
+  const zeilen = new Array(anzahlZeilen).fill("");
+  const worte = pdfText(text).split(/\s+/).filter(Boolean);
+  if (!worte.length) return zeilen;
+  let i = 0;
+  for (const wort of worte) {
+    const kandidat = zeilen[i] ? zeilen[i] + " " + wort : wort;
+    if (kandidat.length <= zeilenlaenge || i === anzahlZeilen - 1 || !zeilen[i]) {
+      zeilen[i] = kandidat;
+    } else {
+      i++;
+      zeilen[i] = wort;
+    }
+  }
+  return zeilen;
+}
+
+// Setzt ein Textfeld. Fehlende Felder werden gesammelt statt geworfen: ein
+// einzelnes unbekanntes Feld darf den Antrag nicht komplett blockieren.
+function setzeText(form, feldname, wert, fehler) {
+  if (!feldname) return;
+  const s = pdfText(wert);
+  if (!s) return;
+  try {
+    form.getTextField(feldname).setText(s);
+  } catch (e) {
+    fehler.push(`Textfeld „${feldname}“: ${e.message}`);
+  }
+}
+
+function setzeZeilen(form, feldnamen, text, fehler, zeilenlaenge) {
+  if (!feldnamen || !feldnamen.length) return;
+  const zeilen = umbrechen(text, feldnamen.length, zeilenlaenge || PDF_ZEILENLAENGE);
+  feldnamen.forEach((name, idx) => setzeText(form, name, zeilen[idx], fehler));
+}
+
+function setzeHaken(form, feldname, an, fehler) {
+  if (!feldname) return;
+  try {
+    const box = form.getCheckBox(feldname);
+    if (an) box.check(); else box.uncheck();
+  } catch (e) {
+    fehler.push(`Kästchen „${feldname}“: ${e.message}`);
+  }
+}
+
+// true -> Ja, false -> Nein, null/undefined -> beide leer.
+function setzeJaNein(form, paar, wert, fehler) {
+  if (!paar) return;
+  const [jaFeld, neinFeld] = paar;
+  setzeHaken(form, jaFeld, wert === true, fehler);
+  setzeHaken(form, neinFeld, wert === false, fehler);
+}
+
+// Summe der Personenzahlen. Nur die Zeilen, die das Formular unter „Summe“
+// zusammenfasst — „Zielgruppe/Alter“ ist eine Beschreibung, keine Anzahl, und
+// „davon besonders schutzbedürftig“ ist eine Teilmenge, kein Summand.
+const SUMMEN_FELDER = [
+  "mitwirkende", "ortskundige", "ortsfremde",
+  "ordnungskraefte", "sanitaet", "brandwache", "technik", "bewirtung"
+];
+
+function berechneSumme(zahlen) {
+  if (!zahlen) return null;
+  let summe = 0;
+  let hatWert = false;
+  for (const key of SUMMEN_FELDER) {
+    const n = parseInt(zahlen[key], 10);
+    if (!isNaN(n)) { summe += n; hatWert = true; }
+  }
+  return hatWert ? summe : null;
+}
+
+// PNG-DataURL -> Uint8Array für pdf-libs embedPng (akzeptiert Wert mit und ohne
+// data:-Präfix), gleiche Hilfsfunktion wie in Trainerdatens pdf-utils.js.
+function _dataUrlToUint8(dataUrl) {
+  const s = String(dataUrl || "");
+  const base64 = s.includes(",") ? s.split(",")[1] : s;
+  if (!base64) return null;
+  const roh = atob(base64);
+  const bytes = new Uint8Array(roh.length);
+  for (let i = 0; i < roh.length; i++) bytes[i] = roh.charCodeAt(i);
+  return bytes;
+}
+
+// Erzeugt das ausgefüllte PDF und liefert {blob, fehler}.
+// `unterschriftDataUrl` ist optional — fehlt sie, bleibt die Linie leer.
+async function erzeugeAntragsPdf(antrag, unterschriftDataUrl) {
+  if (typeof PDFLib === "undefined") {
+    throw new Error("PDF-Bibliothek nicht geladen. Bitte die Seite neu laden (Internetverbindung nötig).");
+  }
+
+  const resp = await fetch(PDF_TEMPLATE_URL);
+  if (!resp.ok) throw new Error(`Formularvorlage nicht abrufbar (HTTP ${resp.status})`);
+  const vorlage = await resp.arrayBuffer();
+
+  const pdfDoc = await PDFLib.PDFDocument.load(vorlage);
+  const form = pdfDoc.getForm();
+  const fehler = [];
+  const F = PDF_FELDER;
+
+  const leiter = antrag.leiter || {};
+  const vertreter = antrag.vertreter || {};
+  const va = antrag.veranstaltung || {};
+  const aufbau = antrag.aufbau || {};
+  const abbau = antrag.abbau || {};
+  const zahlen = antrag.zahlen || {};
+  const unt = antrag.unterstuetzung || {};
+  const b = antrag.buehne || {};
+
+  // --- Abschnitte 1 bis 3 ---
+  setzeText(form, F.veranstaltungsort, antrag.veranstaltungsort, fehler);
+  setzeText(form, F.raeume, antrag.raeume, fehler);
+  setzeText(form, F.bezeichnung, antrag.bezeichnung, fehler);
+  setzeText(form, F.veranstalter, antrag.veranstalter, fehler);
+
+  // --- Veranstaltungsleiter / Vertreter ---
+  setzeText(form, F.leiterName, leiter.name, fehler);
+  setzeText(form, F.leiterTelefon, leiter.telefon, fehler);
+  setzeText(form, F.leiterEmail, leiter.email, fehler);
+  (F.leiterAnschrift || []).forEach((name, i) => {
+    setzeText(form, name, (leiter.anschrift || [])[i], fehler);
+  });
+  setzeText(form, F.vertreterName, vertreter.name, fehler);
+  setzeText(form, F.vertreterTelefon, vertreter.telefon, fehler);
+  setzeText(form, F.vertreterEmail, vertreter.email, fehler);
+  (F.vertreterAnschrift || []).forEach((name, i) => {
+    setzeText(form, name, (vertreter.anschrift || [])[i], fehler);
+  });
+
+  // --- Abschnitt 4: Ablaufplan ---
+  setzeText(form, F.vaDatum, datumDe(va.datum), fehler);
+  setzeText(form, F.vaEinlass, va.einlass, fehler);
+  setzeText(form, F.vaBeginn, va.beginn, fehler);
+  setzeText(form, F.vaEnde, va.ende, fehler);
+  setzeText(form, F.aufbauDatum, datumDe(aufbau.datum), fehler);
+  setzeText(form, F.aufbauBeginn, aufbau.beginn, fehler);
+  setzeText(form, F.aufbauEnde, aufbau.ende, fehler);
+  setzeText(form, F.abbauDatum, datumDe(abbau.datum), fehler);
+  setzeText(form, F.abbauBeginn, abbau.beginn, fehler);
+  setzeText(form, F.abbauEnde, abbau.ende, fehler);
+
+  // --- Abschnitt 5: Teilnehmerzahlen ---
+  setzeText(form, F.zMitwirkende, zahlen.mitwirkende, fehler);
+  setzeText(form, F.zOrtskundige, zahlen.ortskundige, fehler);
+  setzeText(form, F.zOrtsfremde, zahlen.ortsfremde, fehler);
+  setzeText(form, F.zZielgruppe, zahlen.zielgruppe, fehler);
+  setzeText(form, F.zOrdnungskraefte, zahlen.ordnungskraefte, fehler);
+  setzeText(form, F.zSanitaet, zahlen.sanitaet, fehler);
+  setzeText(form, F.zBrandwache, zahlen.brandwache, fehler);
+  setzeText(form, F.zTechnik, zahlen.technik, fehler);
+  setzeText(form, F.zBewirtung, zahlen.bewirtung, fehler);
+  const summe = berechneSumme(zahlen);
+  if (summe !== null) setzeText(form, F.zSumme, String(summe), fehler);
+  setzeText(form, F.zSchutzbeduerftig, zahlen.schutzbeduerftig, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.eintrittsgeld, antrag.eintrittsgeld, fehler);
+
+  // --- Abschnitt 6: technisches Personal ---
+  setzeJaNein(form, PDF_JA_NEIN.technPersonal, antrag.technPersonal, fehler);
+  for (const [key, feld] of Object.entries(PDF_HAKEN)) {
+    setzeHaken(form, feld, unt[key] === true, fehler);
+  }
+  setzeZeilen(form, F.untAufgaben, antrag.unterstuetzungAufgaben, fehler);
+  setzeZeilen(form, F.untSonstiges, antrag.sonstigesText, fehler);
+
+  // --- Abschnitt 7: Beheizung ---
+  setzeJaNein(form, PDF_JA_NEIN.beheizung, antrag.beheizung, fehler);
+  setzeZeilen(form, F.heizBemerkungen, antrag.heizBemerkungen, fehler);
+
+  // --- Abschnitt 8: Speisen und Getränke ---
+  setzeJaNein(form, PDF_JA_NEIN.speisen, antrag.speisen, fehler);
+  setzeZeilen(form, F.speisenText, antrag.speisenText, fehler);
+
+  // --- Abschnitt 9: Bühnen- und Besucherflächen ---
+  setzeJaNein(form, PDF_JA_NEIN.bGenutzt, b.genutzt, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bEigene, b.eigene, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bUmgestaltung, b.umgestaltung, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bPodesterie, b.podesterie, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bZusatzelemente, b.zusatzelemente, fehler);
+  setzeText(form, F.bGrundflaeche, b.grundflaeche, fehler);
+  setzeText(form, F.bHoehe, b.hoehe, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bScheinwerfer, b.scheinwerfer, fehler);
+  setzeText(form, F.bScheinwerferAnzahl, b.scheinwerferAnzahl, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bDekoration, b.dekoration, fehler);
+  setzeZeilen(form, F.bDekorationText, b.dekorationText, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bTontechnik, b.tontechnik, fehler);
+  setzeZeilen(form, F.bTontechnikArt, b.tontechnikArt, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bSaaldekoration, b.saaldekoration, fehler);
+  setzeZeilen(form, F.bSaaldekorationText, b.saaldekorationText, fehler);
+  setzeJaNein(form, PDF_JA_NEIN.bSonstigeAufbauten, b.sonstigeAufbauten, fehler);
+  setzeZeilen(form, F.bSonstigeAufbautenText, b.sonstigeAufbautenText, fehler);
+
+  // --- Unterschriftenblock ---
+  setzeText(form, F.ortDatum, antrag.ortDatum, fehler);
+
+  // Unterschrift der Veranstaltungsleitung über die Linie zeichnen. Der Block
+  // der Schulleitung ('Ort Datum_2' und die Linie darunter) bleibt immer leer —
+  // den zeichnet die Schule selbst auf dem Ausdruck.
+  if (unterschriftDataUrl) {
+    try {
+      const bytes = _dataUrlToUint8(unterschriftDataUrl);
+      if (bytes) {
+        const png = await pdfDoc.embedPng(bytes);
+        const cfg = PDF_UNTERSCHRIFT;
+        // Seitenverhältnis wahren, damit die Unterschrift nicht verzerrt wird.
+        const skala = Math.min(cfg.maxBreite / png.width, cfg.maxHoehe / png.height);
+        const breite = png.width * skala;
+        const hoehe = png.height * skala;
+        pdfDoc.getPages()[cfg.seite].drawImage(png, {
+          x: cfg.x, y: cfg.y, width: breite, height: hoehe
+        });
+      }
+    } catch (e) {
+      fehler.push("Die Unterschrift konnte nicht ins PDF übernommen werden: " + e.message
+        + " — bitte auf dem Ausdruck unterschreiben.");
+    }
+  }
+
+  // „Bemerkung Besucheraufkommen“ hat im Original kein Eingabefeld, sondern nur
+  // eine bedruckte Zeile. Der Text wird deshalb auf die Seite gezeichnet.
+  const besucher = pdfText(antrag.besucheraufkommen || "");
+  if (besucher) {
+    const cfg = PDF_BESUCHER_TEXT;
+    const seite = pdfDoc.getPages()[cfg.seite];
+    const helv = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    seite.drawText(besucher.slice(0, cfg.maxZeichen), {
+      x: cfg.x, y: cfg.y, size: cfg.groesse, font: helv,
+      color: PDFLib.rgb(0.1, 0.1, 0.5)
+    });
+    if (besucher.length > cfg.maxZeichen) {
+      fehler.push("Die Bemerkung zum Besucheraufkommen ist länger als die Zeile im Formular und wurde im PDF gekürzt.");
+    }
+  }
+
+  // Erscheinungsbild der Felder erzeugen, damit auch Betrachter ohne
+  // NeedAppearances-Unterstützung (z.B. der PDF-Betrachter in Chrome) die
+  // Werte sehen und nicht ein leeres Formular anzeigen.
+  try {
+    const helv = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    form.updateFieldAppearances(helv);
+  } catch (e) {
+    fehler.push("Feld-Darstellung konnte nicht neu erzeugt werden: " + e.message);
+  }
+
+  const bytes = await pdfDoc.save();
+  return { blob: new Blob([bytes], { type: "application/pdf" }), fehler };
+}
+
+// ISO-Datum (aus <input type="date">) für das Formular nach deutscher
+// Schreibweise. Leere oder unerwartete Werte bleiben unverändert.
+function datumDe(iso) {
+  const s = String(iso || "");
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : s;
+}
+
+// Dateiname aus Bezeichnung und Datum, ohne Zeichen, die Windows nicht mag.
+function pdfDateiname(antrag) {
+  const teil = (antrag.bezeichnung || "Raumnutzung")
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, "_")
+    .slice(0, 60);
+  const datum = (antrag.veranstaltung && antrag.veranstaltung.datum) || "";
+  return `Raumnutzung_${teil}${datum ? "_" + datum : ""}.pdf`;
+}
