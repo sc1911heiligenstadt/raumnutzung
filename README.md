@@ -11,10 +11,27 @@ verunglückter Antrag, und alle bisherigen Anträge bleiben nachlesbar.
 
 | Reiter | Wofür |
 |---|---|
-| **Anträge** | Die laufenden Anträge auf Raumnutzung mit ihrem Stand |
-| **Archiv** | Erledigte Anträge, nachlesbar |
-| **Antrag** | Das Formular selbst |
-| **Einstellungen** | Verwaltung |
+| **Anträge** | Die laufenden Anträge auf Raumnutzung mit ihrem Stand — Entwürfe, fertig gemeldete und eingereichte, mit Status-Filter und dem Sammelexport „Alle als PDF-ZIP“ |
+| **Archiv** | Was der Landkreis genehmigt oder abgelehnt hat — nachlesbar, weiter als PDF ausgebbar, mit eigenem Filter und eigenem Sammelexport |
+| **Antrag** | Das Formular selbst, inklusive Unterschriftsfläche |
+| **Einstellungen** | Der Verteiler: wer über fertig gemeldete Anträge eine Nachricht aufs Handy bekommt |
+| **Info** | Was die App kann, die Änderungen und der Datenschutzhinweis — für alle sichtbar |
+
+## Der Weg eines Antrags
+
+1. Ein Trainer legt den Antrag an und füllt ihn aus. Ein neuer Antrag ist bereits so
+   vorbelegt wie das zuletzt eingereichte Formular; Eingaben werden laufend gesichert.
+2. Die Veranstaltungsleitung **unterschreibt direkt in der App** — mit Maus, Finger oder
+   Stift. Der Unterschriftsblock der Schulleitung bleibt leer, den zeichnet die Schule
+   auf dem Ausdruck.
+3. Der Knopf **„Fertig zum Einreichen“** ist der Übergabepunkt. Er setzt den gleichnamigen
+   Status und meldet den Einreichenden eine Nachricht aufs Handy.
+4. Die **Geschäftsstelle** erzeugt das Original-PDF, schickt es per E-Mail ans
+   Schulverwaltungsamt und setzt den Status. Den Status bewegt nur sie — sonst könnte ein
+   Antrag auf „Eingereicht“ stehen, ohne dass ihn je jemand eingereicht hat.
+
+Ein bestehender Antrag lässt sich als Vorlage kopieren; die Unterschrift wird dabei
+bewusst nicht mitkopiert.
 
 ## Das Formular
 
@@ -26,7 +43,10 @@ Besucherflächen** (9.). Dazu Veranstaltungsleiter/in samt Vertretung, private
 Anschrift und die Unterschrift der Veranstaltungsleitung.
 
 Aus den Eingaben entsteht das ausgefüllte Original-PDF — nicht ein Nachbau,
-sondern das Formular des Landkreises selbst.
+sondern das Formular des Landkreises selbst. Es bleibt ausfüllbar, falls das Amt
+Rückfragen hat. Mit **„Per E-Mail senden“** geht dasselbe PDF direkt ans
+Schulverwaltungsamt des Landkreises, Kopie an die Geschäftsstelle; Betreff und
+Anschreiben sind fest hinterlegt.
 
 ## Wichtig: nicht die Platzbelegung
 
@@ -38,9 +58,18 @@ Wochenplan der Trainingsplätze und Hallenzeiten steht in der
 
 Die Anmeldung läuft über die [Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/) — dort einmal anmelden, danach ist dieses Werkzeug offen.
 
-Die Rechte gelten in drei Stufen: **Sehen** (Anträge ansehen), **Bearbeiten**
-(Anträge stellen und pflegen) und **Administrieren** (Reiter *Einstellungen*).
-Wer welche Stufe hat, legt die Tools-Übersicht fest.
+Das Werkzeug ist auf einen begrenzten Kreis beschränkt, weil das Formular private
+Anschriften und Telefonnummern enthält.
+
+Die Rechte gelten in drei Stufen: **Sehen** (Anträge und Archiv ansehen,
+schreibgeschützt), **Bearbeiten** (Anträge anlegen, ausfüllen, kopieren und
+unterschreiben) und **Administrieren** (die drei Ausgabewege — das amtliche PDF
+erzeugen, per E-Mail einreichen und der Sammelexport —, dazu der Status eines Antrags
+und der Reiter *Einstellungen*). Wer welche Stufe hat, legt die Tools-Übersicht fest.
+
+Die Arbeitsteilung dahinter: ausfüllen darf jeder Bearbeiter, das fertige Formular ans
+Amt herausgeben ist Sache der Geschäftsstelle. Beim Mailversand steht diese Schranke
+auch auf dem Server, nicht nur am ausgeblendeten Knopf.
 
 ## Lokal starten
 

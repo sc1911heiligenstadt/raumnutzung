@@ -2,99 +2,6 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
-    version: "1.7",
-    groups: [
-      {
-        title: "Umlaute im PDF: aus „Müller“ konnte „Mu?ller“ werden",
-        items: [
-          "Ein „ü“ kann auf zwei Arten im Rechner stehen: als ein Zeichen, oder als „u“ mit einem getrennt gespeicherten Pünktchen-Zeichen dahinter. Auf dem Bildschirm sieht beides gleich aus.",
-          "Das PDF-Formular kann nur den ersten Zeichensatz. Alles andere wurde durch ein Fragezeichen ersetzt — bei der zweiten Art traf das genau das Pünktchen-Zeichen. Im Antrag ans Landratsamt stand dann „Mu?ller“ statt „Müller“, „Turnhalle Su?d“ statt „Turnhalle Süd“.",
-          "Zu sehen war davon nichts: Auf der Seite stand der Name richtig, das Fragezeichen tauchte erst im fertigen PDF auf. Betroffen war, wer einen Namen eingefügt statt getippt hat — vom Mac oder iPhone kommt meist die zweite Art.",
-          "Jetzt werden beide Arten gleich behandelt. An bereits erzeugten PDF-Dateien ändert sich nichts, die müssen neu erzeugt werden."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.6",
-    groups: [
-      {
-        title: "Der Reiter „Info“ erklärt jetzt, was die App wirklich tut",
-        items: [
-          "Dort stand bisher ein einzelner Satz. Jetzt steht da, wofür die einzelnen Reiter da sind, was die App mit den Eingaben macht und wo etwas anderes hingehört.",
-          "Am Funktionsumfang ändert sich nichts — nur an der Beschreibung."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.5",
-    groups: [
-      {
-        title: "Wenn eine Unterschrift nicht gelöscht werden kann, steht das jetzt da",
-        items: [
-          "Wird eine Unterschrift entfernt oder ein Antrag gelöscht, verschwindet auch die gespeicherte Unterschrift aus der Vereins-Cloud. Schlug das fehl — etwa weil die Cloud gerade nicht erreichbar war — passierte bisher nichts Sichtbares: der Antrag war weg, die Datei mit der Unterschrift lag aber weiter dort.",
-          "Jetzt erscheint ein Hinweis mit dem Grund. Der Vorgang selbst läuft weiter, eine liegengebliebene Datei hält ihn nicht auf."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.4",
-    groups: [
-      {
-        title: "Beim Sitzungsende wird auch alles neben der Seite geräumt",
-        items: [
-          "Beim Sitzungsende wurde die Seite bereits geleert. Der eigene Name oben rechts steht aber daneben und blieb stehen. Jetzt wird er mitgeleert.",
-          "Der Hinweis erscheint außerdem an jeder Stelle, an der die Anmeldung wegfällt — vorher nur bei einem Teil der Wege."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.3",
-    groups: [
-      {
-        title: "Beim Abmelden bleibt nichts stehen",
-        items: [
-          "Läuft die Anmeldung ab, während die App offen ist — zum Beispiel weil ein Speichern nach längerer Pause fehlschlägt —, erscheint wie bisher der Hinweis „bitte neu anmelden“.",
-          "Neu ist: der Bildschirm dahinter wird jetzt auch geleert. Vorher wurde er nur unsichtbar gemacht, und alles Angezeigte blieb im Browser stehen — sichtbar für jeden, der sich an denselben Rechner setzt und nachschaut.",
-          "Für dich ändert sich nichts: der Weg zurück war schon immer ein Neuladen der Seite."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.2",
-    groups: [
-      {
-        title: "Benachrichtigungen",
-        items: [
-          "Ein fertig ausgefüllter Antrag meldete sich bisher auf den Geräten aller, die die App bearbeiten dürfen — auch bei denen, die ihn gar nicht einreichen können. Jetzt geht die Nachricht nur noch an die, die den Antrag beim Landkreis einreichen.",
-          "An der Nachricht über den weiteren Stand ändert sich nichts: die bekommt weiterhin nur, wer den Antrag ausgefüllt hat."
-        ]
-      },
-      {
-        title: "Am Handy",
-        items: [
-          "Bisher brach die Reiterleiste selbst um, die rechte Reiter-Gruppe darin aber nicht: Sie rutschte als ein Stück in die zweite Zeile und lief dort weiter über den rechten Rand hinaus. Jetzt bricht auch sie um, sobald sie zu breit wird. Zu sehen ist das nur, wenn genug Reiter nebeneinanderstehen — bis dahin sieht alles aus wie bisher."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.1",
-    groups: [
-      {
-        title: "Startet schneller",
-        items: [
-          "Die PDF-Bibliothek wird erst geladen, wenn wirklich ein PDF entsteht. Vorher kam sie bei jedem Öffnen der Seite mit — mit 202 KB war sie die größte Datei der ganzen App, gebraucht wird sie aber nur beim Erzeugen, Versenden und beim Sammelexport.",
-          "Am Ablauf ändert sich nichts: beim ersten PDF lädt sie automatisch nach. Nur wenn dabei keine Internetverbindung besteht, sagt die App es jetzt deutlich."
-        ]
-      }
-    ]
-  },
-  {
     version: "1.0",
     groups: [
       {
@@ -116,15 +23,20 @@ const APP_CHANGELOG = [
           "Die Unterschrift landet zusammen mit Ort und Datum an der richtigen Stelle im PDF.",
           "Der Unterschriftsblock der Schulleitung bleibt bewusst leer — den zeichnet die Schule selbst auf dem Ausdruck.",
           "Lässt sich das Unterschriftsbild nicht hochladen, etwa bei schlechter Verbindung, steht das neben der Fläche. Die Unterschrift geht dabei nicht verloren, sie wird beim nächsten Speichern erneut hochgeladen.",
+          "Wird eine Unterschrift entfernt oder ein Antrag gelöscht, verschwindet auch die gespeicherte Unterschrift aus der Vereins-Cloud. Klappt das nicht, erscheint ein Hinweis mit dem Grund — der Vorgang selbst läuft weiter, eine liegengebliebene Datei hält ihn nicht auf.",
           "Wer kein Bearbeiten-Recht hat, sieht den Grund direkt an der gesperrten Unterschriftsfläche."
         ]
       },
       {
-        title: "Das amtliche Formular",
+        title: "Das amtliche Formular und der Sammelexport",
         items: [
           "Aus jedem Antrag entsteht auf Knopfdruck das ausgefüllte Original-Formular des Landkreises als PDF — genau das Blatt, das das Liegenschaftsamt erwartet.",
           "Das erzeugte PDF lässt sich in jedem PDF-Programm nachbearbeiten, falls das Amt Rückfragen hat.",
-          "Mehrzeilige Texte wie die Aufgaben des Hausmeisters kommen mit ihren Zeilenumbrüchen sauber im Formular an."
+          "Mehrzeilige Texte wie die Aufgaben des Hausmeisters kommen mit ihren Zeilenumbrüchen sauber im Formular an, und Umlaute stehen im PDF genauso da wie auf dem Bildschirm — auch bei einem eingefügten Namen vom Mac oder iPhone.",
+          "Über jeder Antragsliste steht „Alle als PDF-ZIP“: daraus entsteht aus jedem angezeigten Antrag das ausgefüllte Original-PDF, gebündelt in einem Archiv — ein Download statt einer Datei je Antrag.",
+          "Exportiert wird genau das, was die Liste gerade zeigt. Steht der Status-Filter auf „Eingereicht“, sind auch nur diese Anträge im Archiv. Der Knopf nennt die Anzahl, und vor dem Start wird nachgefragt.",
+          "Arbeitsliste und Archiv haben je einen eigenen Knopf. Der Export packt immer nur die Liste, in der er steht — die Rückfrage sagt vorher, wie viele Anträge der jeweils anderen Liste nicht dabei sind.",
+          "Lässt sich ein einzelner Antrag nicht erzeugen, laufen die übrigen trotzdem durch; die betroffenen werden am Ende aufgelistet."
         ]
       },
       {
@@ -148,21 +60,12 @@ const APP_CHANGELOG = [
       {
         title: "Benachrichtigung aufs Handy",
         items: [
-          "Meldet jemand einen Antrag als fertig, bekommen die Einreichenden eine Nachricht aufs Handy, statt selbst in die Liste schauen zu müssen.",
+          "Meldet jemand einen Antrag als fertig, bekommen die Einreichenden eine Nachricht aufs Handy, statt selbst in die Liste schauen zu müssen. Wer den Antrag gar nicht einreichen kann, bekommt sie nicht.",
           "Umgekehrt bekommt der ausfüllende Trainer eine Nachricht, sobald sein Antrag eingereicht wurde und wenn der Landkreis genehmigt oder ablehnt.",
           "Die Nachricht nennt kein Ergebnis — sie steht auf dem Sperrbildschirm. Was passiert ist, sieht man nach dem Antippen.",
           "Eingeschaltet wird das in der Tools-Übersicht unter „Mein Konto“, einzeln für dieses Werkzeug. Wer es nicht einschaltet, merkt keinen Unterschied.",
           "Im Reiter „Einstellungen“ lässt sich einstellen, wer über fertige Anträge benachrichtigt wird. Zur Auswahl stehen nur Personen, die den Antrag auch einreichen dürfen — ein Haken bei jemand anderem hätte nichts bewirkt.",
           "Solange nichts angehakt ist, werden alle Berechtigten benachrichtigt. Unter der Liste steht, was der aktuelle Stand bedeutet. Die Auswahl kann den Kreis nur verkleinern; wer sein Recht verliert, bekommt automatisch nichts mehr."
-        ]
-      },
-      {
-        title: "Sammelexport",
-        items: [
-          "Über jeder Antragsliste steht „Alle als PDF-ZIP“: daraus entsteht aus jedem angezeigten Antrag das ausgefüllte Original-PDF, gebündelt in einem Archiv — ein Download statt einer Datei je Antrag.",
-          "Exportiert wird genau das, was die Liste gerade zeigt. Steht der Status-Filter auf „Eingereicht“, sind auch nur diese Anträge im Archiv. Der Knopf nennt die Anzahl, und vor dem Start wird nachgefragt.",
-          "Arbeitsliste und Archiv haben je einen eigenen Knopf. Der Export packt immer nur die Liste, in der er steht — die Rückfrage sagt vorher, wie viele Anträge der jeweils anderen Liste nicht dabei sind.",
-          "Lässt sich ein einzelner Antrag nicht erzeugen, laufen die übrigen trotzdem durch; die betroffenen werden am Ende aufgelistet."
         ]
       },
       {
@@ -188,18 +91,13 @@ const APP_CHANGELOG = [
         ]
       },
       {
-        title: "Bedienung am Handy",
+        title: "Bedienung am Handy und Speicherung",
         items: [
           "Die Reiterleiste bricht am Handy um, statt seitlich aus dem Bild zu laufen — auch die hinteren Reiter sind auf schmalen Bildschirmen erreichbar.",
           "Eingabefelder sind mindestens 16 Pixel groß, damit der iPhone-Browser beim Antippen nicht ungefragt in die Seite hineinzoomt und verschoben stehen bleibt.",
-          "Unterschreiben funktioniert auch auf älteren iPhones und iPads — die Fläche nimmt dort den Finger an, und die Unterschrift wird zuverlässig gespeichert.",
-          "Die Auswahl-Lupe von iOS bleibt beim Unterschreiben aus, sodass sie den Strich nicht abreißen lässt."
-        ]
-      },
-      {
-        title: "Daten & Speicherung",
-        items: [
-          "Gespeichert wird in der Vereins-Nextcloud über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht."
+          "Unterschreiben funktioniert auch auf älteren iPhones und iPads — die Fläche nimmt dort den Finger an, und die Unterschrift wird zuverlässig gespeichert. Die Auswahl-Lupe von iOS bleibt dabei aus, sodass sie den Strich nicht abreißen lässt.",
+          "Gespeichert wird in der Vereins-Nextcloud über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht.",
+          "Endet die Anmeldung, während die App offen ist, erscheint der Hinweis „bitte neu anmelden“, und der Bildschirm dahinter wird samt dem eigenen Namen oben rechts geleert — damit nichts für den Nächsten am selben Rechner stehen bleibt. Der Weg zurück ist ein Neuladen der Seite."
         ]
       }
     ]
