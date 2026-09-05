@@ -26,9 +26,17 @@ let exportLaeuft = false;
 let saveTimer = null;
 let saveInFlight = false;
 let savePending = false;
+// Fuer das Sicherheitsnetz beim Verlassen der Seite (beforeunload in bindeAlles):
+// "es liegt etwas an" und "der letzte Versuch ging schief". Beides wird eigens
+// gepflegt statt aus savePending/saveInFlight abgeleitet -- der 900-ms-Debounce
+// laeuft schon, bevor irgendetwas davon gesetzt ist, und genau dieses Fenster
+// ist der Fall, den das Netz auffangen soll.
+let ungespeicherteAenderungen = false;
+let letzterSaveFehlgeschlagen = false;
 
 function scheduleSave() {
   if (!canEdit()) return;
+  ungespeicherteAenderungen = true;
   if (saveTimer) clearTimeout(saveTimer);
   setSaveHint("Änderungen werden gespeichert…");
   saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 900);
@@ -48,8 +56,12 @@ async function doSave() {
     // scheitert — dann steht es jetzt am Unterschriftsfeld.
     const offen = findeAntrag(currentAntragId);
     if (offen) setUnterschriftStatus(offen);
+    ungespeicherteAenderungen = false;
+    letzterSaveFehlgeschlagen = false;
     return true;
   } catch (e) {
+    ungespeicherteAenderungen = true;
+    letzterSaveFehlgeschlagen = true;
     if (e instanceof NotLoggedInError) {
       showConnectScreen(e.message);
     } else if (e instanceof ConflictError) {
@@ -64,7 +76,7 @@ async function doSave() {
     return false;
   } finally {
     saveInFlight = false;
-    if (savePending) { savePending = false; doSave(); }
+    if (savePending) { savePending = false; ungespeicherteAenderungen = true; doSave(); }
   }
 }
 
@@ -1732,10 +1744,28 @@ async function boot() {
   });
   bindeFormular();
 
-  // Letzten Autosave beim Schließen/Wegschalten noch loswerden.
-  window.addEventListener("beforeunload", flushSave);
+  // Letzten Autosave beim Wegschalten noch loswerden — dabei lebt die Seite
+  // weiter, der normale Save trägt also.
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushSave();
+  });
+
+  // Beim ECHTEN Verlassen der Seite trägt er nicht: der Browser bricht einen
+  // laufenden fetch beim Entladen des Dokuments ab. flushSave feuerte zwar, tat
+  // aber genau in dem Fall nichts, für den es gedacht war. Deshalb hier der
+  // keepalive-Beacon — dasselbe Muster wie in den 13 Schwester-Apps.
+  //
+  // Nachgefragt wird NUR, wenn dieser Weg nicht trägt (über der 64-KB-Grenze,
+  // kein Token, oder der letzte reguläre Versuch schlug schon fehl). Sonst käme
+  // die Rückfrage bei JEDEM Schließen kurz nach einer Eingabe — also ständig —
+  // und würde reflexhaft weggeklickt, gerade dann wenn sie einmal wirklich zählt.
+  window.addEventListener("beforeunload", (e) => {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    if (!ungespeicherteAenderungen) return;
+    const abgeschickt = gatewaySaveBeacon(appData);
+    if (abgeschickt && !letzterSaveFehlgeschlagen) return;
+    e.preventDefault();
+    e.returnValue = "";
   });
 }
 

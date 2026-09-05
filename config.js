@@ -2,6 +2,18 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.1",
+    groups: [
+      {
+        title: "Speichern",
+        items: [
+          "Wer die Seite direkt nach einer Eingabe schließt, verliert sie nicht mehr. Der Rettungs-Speicher beim Schließen startete bisher einen ganz normalen Netzaufruf — und den bricht der Browser beim Verlassen der Seite sofort wieder ab. Betroffen waren die zuletzt getippten Angaben eines Antrags, also Anschriften, Telefonnummern und Termine.",
+          "Trägt der Rettungsweg ausnahmsweise nicht (sehr großer Antrag, noch nicht ausgelagerte Unterschrift, abgelaufene Anmeldung), fragt die App jetzt vor dem Schließen nach, statt stillschweigend etwas zu verlieren."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.0",
     groups: [
       {
